@@ -1,0 +1,17 @@
+.square {
+    width: 2%;
+    height: 2%;
+    margin-left: 1rem;
+}
+
+.red-square {
+    background: red;
+}
+
+.green-square {
+    background: green;
+}
+
+.yellow-square {
+    background: yellow;
+}
