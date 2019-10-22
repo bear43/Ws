@@ -26,4 +26,9 @@ public class AuthController {
         userService.createUser(login, pass);
         return "redirect:/login";
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
 }

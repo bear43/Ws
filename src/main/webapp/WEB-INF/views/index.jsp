@@ -10,19 +10,27 @@
 <html>
 <head>
     <title>MainPage</title>
-    <link rel="stylesheet" href="/css/modal.css"/>
-    <script src="/js/vue.js"></script>
+    <link rel="stylesheet" href="<c:url value='/static/css/modal.css'/>"/>
+    <script src="<c:url value='/static/js/vue.js'/>"></script>
+    <script src="<c:url value='/static/js/sockjs.js'/>"></script>
+    <script src="<c:url value='/static/js/stomp.js'/>"></script>
+    <script src="<c:url value='/static/js/util.js'/>"></script>
 </head>
 <body>
     <div id="app">
         <button id="show-modal" @click="showModal = true">Show Modal</button>
-        <!-- use the modal component, pass in the prop -->
-        <modal v-if="showModal" @close="showModal = false" header-text="TestHead" body-text="bodyTest" footer-text="footer">
+        <modal
+                v-if="showModal"
+                @close="showModal = false"
+                header-text="Add message"
+                body-text="bodyTest"
+                footer-text="">
+            <add-message-form slot="body" @on-submit-message="onSubmitMessage"></add-message-form>
         </modal>
 
     </div>
 </body>
-<script src="/js/index.js"></script>
+<script src="<c:url value='/static/js/index.js'/>"></script>
 <script type="text/x-template" id="modal-template">
     <transition name="modal">
         <div class="modal-mask">
@@ -53,5 +61,11 @@
             </div>
         </div>
     </transition>
+</script>
+<script type="text/x-template" id="add-message-form">
+    <div>
+        <input type="text" v-model="text"/>
+        <button @click="$emit('on-submit-message', text)">Отправить</button>
+    </div>
 </script>
 </html>

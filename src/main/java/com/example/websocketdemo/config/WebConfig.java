@@ -1,8 +1,11 @@
 package com.example.websocketdemo.config;
 
+import com.example.websocketdemo.converter.MessageDTOToMessageConverter;
+import com.example.websocketdemo.converter.MessageToMessageDTOConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -11,7 +14,6 @@ import org.springframework.web.servlet.view.JstlView;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(value = "com.*")
 public class WebConfig implements WebMvcConfigurer
 {
     @Bean
@@ -27,9 +29,18 @@ public class WebConfig implements WebMvcConfigurer
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-                .addResourceHandler("/js/**")
+                .addResourceHandler("/static/js/**")
                 .addResourceLocations("/static/js/");
-        registry.addResourceHandler("/css/**")
+        registry.addResourceHandler("/static/css/**")
                 .addResourceLocations("/static/css/");
+        registry
+                .addResourceHandler("/webjars/**")
+                .addResourceLocations("/webjars/");
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new MessageToMessageDTOConverter());
+        registry.addConverter(new MessageDTOToMessageConverter());
     }
 }

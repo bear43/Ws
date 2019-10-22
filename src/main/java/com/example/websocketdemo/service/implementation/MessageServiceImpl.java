@@ -2,8 +2,10 @@ package com.example.websocketdemo.service.implementation;
 
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.User;
+import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.repository.MessageRepository;
 import com.example.websocketdemo.service.MessageService;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,8 +13,11 @@ public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
 
-    public MessageServiceImpl(MessageRepository messageRepository) {
+    private final ConversionService conversionService;
+
+    public MessageServiceImpl(MessageRepository messageRepository, ConversionService conversionService) {
         this.messageRepository = messageRepository;
+        this.conversionService = conversionService;
     }
 
 
@@ -34,5 +39,15 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void removeMessage(long id) throws Exception {
         messageRepository.deleteById(id);
+    }
+
+    @Override
+    public MessageDTO convertToDTO(Message message) {
+        return conversionService.convert(message, MessageDTO.class);
+    }
+
+    @Override
+    public Message convertToEntity(MessageDTO messageDTO) {
+        return conversionService.convert(messageDTO, Message.class);
     }
 }
