@@ -9,7 +9,7 @@ import org.springframework.core.convert.converter.Converter;
 public class MessageToMessageDTOConverter implements Converter<Message, MessageDTO> {
     @Override
     public MessageDTO convert(Message message) {
-        return new MessageDTO(message.getId(), message.getText(), message.getCreationTime(), false);
+        return new MessageDTO(message.getId(), message.getText(), message.getCreationTime(), false, message.getAuthor());
     }
 
 

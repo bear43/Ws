@@ -8,11 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class UpdaterController {
@@ -46,6 +50,15 @@ public class UpdaterController {
         messageService.removeMessage(message.getId());
         message = new MessageDTO(message.getId(), true);
         return message;
+    }
+
+    @MessageMapping("/read")
+    @SendTo("/sender/update")
+    public List<MessageDTO> readAll() {
+        List<Message> messageList = messageService.readAll();
+        List<MessageDTO> messageDTOList = new ArrayList<>();
+        messageList.forEach(x -> messageDTOList.add(messageService.convertToDTO(x)));
+        return messageDTOList;
     }
 
     @GetMapping("/test")

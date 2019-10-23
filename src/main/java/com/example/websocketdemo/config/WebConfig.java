@@ -14,9 +14,10 @@ import org.springframework.web.servlet.view.JstlView;
 
 @Configuration
 @EnableWebMvc
+@ComponentScan("com.example.websocketdemo.config")
 public class WebConfig implements WebMvcConfigurer
 {
-    @Bean
+    /*@Bean
     public InternalResourceViewResolver viewResolver()
     {
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();
@@ -24,18 +25,15 @@ public class WebConfig implements WebMvcConfigurer
         resolver.setPrefix("/WEB-INF/views/");
         resolver.setSuffix(".jsp");
         return resolver;
-    }
+    }*/
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-                .addResourceHandler("/static/js/**")
-                .addResourceLocations("/static/js/");
-        registry.addResourceHandler("/static/css/**")
-                .addResourceLocations("/static/css/");
-        registry
-                .addResourceHandler("/webjars/**")
-                .addResourceLocations("/webjars/");
+                .addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/");
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/");
     }
 
     @Override

@@ -8,6 +8,9 @@ import com.example.websocketdemo.service.MessageService;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class MessageServiceImpl implements MessageService {
 
@@ -49,5 +52,12 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public Message convertToEntity(MessageDTO messageDTO) {
         return conversionService.convert(messageDTO, Message.class);
+    }
+
+    @Override
+    public List<Message> readAll() {
+        List<Message> messageList = new ArrayList<>();
+        messageRepository.findAll().forEach(messageList::add);
+        return messageList;
     }
 }

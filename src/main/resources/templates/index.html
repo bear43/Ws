@@ -1,20 +1,13 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%--
-  Created by IntelliJ IDEA.
-  User: kotikov
-  Date: 22.10.2019
-  Time: 13:47
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ru" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>MainPage</title>
-    <link rel="stylesheet" href="<c:url value='/static/css/modal.css'/>"/>
-    <script src="<c:url value='/static/js/vue.js'/>"></script>
-    <script src="<c:url value='/static/js/sockjs.js'/>"></script>
-    <script src="<c:url value='/static/js/stomp.js'/>"></script>
-    <script src="<c:url value='/static/js/util.js'/>"></script>
+    <link rel="stylesheet" th:href="@{css/modal.css}"/>
+    <script th:src="@{js/vue.js}"></script>
+    <script th:src="@{js/sockjs.js}"></script>
+    <script th:src="@{js/stomp.js}"></script>
+    <script th:src="@{js/util.js}"></script>
 </head>
 <body>
     <div id="app">
@@ -27,10 +20,11 @@
                 footer-text="">
             <add-message-form slot="body" @on-submit-message="onSubmitMessage"></add-message-form>
         </modal>
-
+        <message-container
+            v-bind:message-list="messageList"
+        ></message-container>
     </div>
 </body>
-<script src="<c:url value='/static/js/index.js'/>"></script>
 <script type="text/x-template" id="modal-template">
     <transition name="modal">
         <div class="modal-mask">
@@ -68,4 +62,26 @@
         <button @click="$emit('on-submit-message', text)">Отправить</button>
     </div>
 </script>
+<script type="text/x-template" id="message-item-template">
+    <tr><td>{{text}}</td><td>{{creationDate}}</td><td>{{author.username}}</td></tr>
+</script>
+<script type="text/x-template" id="msg-cont">
+    <div>
+        <table border="1">
+            <tr>
+                <th>Сообщение</th>
+                <th>Дата</th>
+                <th>Автор</th>
+            </tr>
+            <message-item
+                    v-for="item in messageList"
+                    v-bind:key="item.id"
+                    v-bind:text="item.text"
+                    v-bind:author="item.author"
+                    v-bind:creationDate="item.creationDate"
+            ></message-item>
+        </table>
+    </div>
+</script>
+<script th:src="@{js/index.js}"></script>
 </html>
