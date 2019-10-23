@@ -1,4 +1,4 @@
-package com.example.websocketdemo.converter;
+package com.example.websocketdemo.converter.message;
 
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.dto.MessageDTO;

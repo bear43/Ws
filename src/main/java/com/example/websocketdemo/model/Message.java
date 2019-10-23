@@ -1,14 +1,16 @@
 package com.example.websocketdemo.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
-public class Message {
+public class Message extends Audit {
 
     @Id
     @GeneratedValue

@@ -23,6 +23,7 @@
         <message-container
             v-bind:message-list="messageList"
         ></message-container>
+        <add-message-form @on-submit-message="onSubmitMessage"></add-message-form>
     </div>
 </body>
 <script type="text/x-template" id="modal-template">
@@ -63,7 +64,20 @@
     </div>
 </script>
 <script type="text/x-template" id="message-item-template">
-    <tr><td>{{text}}</td><td>{{creationDate}}</td><td>{{author.username}}</td></tr>
+    <tr>
+        <td>
+            {{text}}
+        </td>
+        <td>
+            {{creationDate}}
+        </td>
+        <td>
+            {{author.username}}
+        </td>
+        <td>
+            <button>Удалить</button>
+        </td>
+    </tr>
 </script>
 <script type="text/x-template" id="msg-cont">
     <div>
@@ -79,7 +93,8 @@
                     v-bind:text="item.text"
                     v-bind:author="item.author"
                     v-bind:creationDate="item.creationDate"
-            ></message-item>
+            >
+            </message-item>
         </table>
     </div>
 </script>

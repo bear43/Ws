@@ -11,11 +11,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "usr")
-public class User implements UserDetails {
-
-    @Id
-    @GeneratedValue
-    private Long id;
+public class User extends Audit implements UserDetails {
 
     @Column
     private String username;
@@ -28,20 +24,16 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<Message> messageList;
 
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Channel> channelList;
+
     public User(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
     public User() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public void setUsername(String username) {
         this.username = username;

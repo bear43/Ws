@@ -2,6 +2,8 @@ let stompClient = null;
 
 let subscribeHandlers = [];
 
+let debug = false;
+
 function getRawHandlers() {
     return [
             (data) => {
@@ -23,7 +25,7 @@ function connect(endPoint) {
     stompClient = Stomp.over(socket);
     return new Promise((onsuccess, onreject) => {
         stompClient.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
+            if(debug === true) console.log('Connected: ' + frame);
             onsuccess();
             stompClient.subscribe(endPoint, function (message) {
                 rawDataHandlers.forEach(handler => handler(message));
@@ -56,5 +58,5 @@ function disconnect() {
     if (stompClient !== null) {
         stompClient.disconnect();
     }
-    console.log("Disconnected");
+    if(debug === true) console.log("Disconnected");
 }
