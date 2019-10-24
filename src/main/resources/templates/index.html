@@ -20,6 +20,9 @@
                 footer-text="">
             <add-message-form slot="body" @on-submit-message="onSubmitMessage"></add-message-form>
         </modal>
+        <!--<channel-container
+            v-bind:channel-list="channelList"
+        ></channel-container>-->
         <message-container
             v-bind:message-list="messageList"
         ></message-container>
@@ -75,7 +78,7 @@
             {{author.username}}
         </td>
         <td>
-            <button>Удалить</button>
+            <button @click="onDeleteMessage">Удалить</button>
         </td>
     </tr>
 </script>
@@ -90,11 +93,41 @@
             <message-item
                     v-for="item in messageList"
                     v-bind:key="item.id"
+                    v-bind:id="item.id"
                     v-bind:text="item.text"
                     v-bind:author="item.author"
                     v-bind:creationDate="item.creationDate"
             >
             </message-item>
+        </table>
+    </div>
+</script>
+<script type="text/x-template" id="channel-item-template">
+    <tr>
+        <td>
+            {{title}}
+        </td>
+        <td>
+            {{author.username}}
+        </td>
+    </tr>
+</script>
+<script type="text/x-template" id="channel-container-template">
+    <div>
+        <table border="1">
+            <tr>
+                <th>Название канала</th>
+                <th>Создатель</th>
+            </tr>
+            <channel-item
+                    v-for="item in channelList"
+                    v-bind:key="item.id"
+                    v-bind:id="item.id"
+                    v-bind:title="item.title"
+                    v-bind:author="item.author"
+                    @click="onClick"
+            >
+            </channel-item>
         </table>
     </div>
 </script>

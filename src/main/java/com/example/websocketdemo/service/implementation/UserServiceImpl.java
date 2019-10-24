@@ -41,6 +41,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getCurrentUser() throws Exception {
         Optional<Authentication> auth = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
-        return (User)auth.orElseThrow(() -> new Exception("No current user")).getPrincipal();
+        User user = (User)auth.orElseThrow(() -> new Exception("No current user")).getPrincipal();
+        if(user.getId() == null) {
+            user.setId(userRepository.findByUsername(user.getUsername()).getId());
+        }
+        return user;
     }
 }

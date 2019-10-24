@@ -1,25 +1,25 @@
 let stompClient = null;
 
-let subscribeHandlers = [];
-
 let debug = false;
 
-function getRawHandlers() {
-    return [
-            (data) => {
-                defaultRawDataHandler(data);
-        }
-    ];
+function defaultJSONHandler(point, data) {
+    point.bodyHandlers.forEach(handlerInstance => {
+        handlerInstance.handler(JSON.parse(data.body), handlerInstance.args);
+    });
 }
 
-let rawDataHandlers = getRawHandlers();
-
-function defaultRawDataHandler(data) {
-    let jsonBody = JSON.parse(data.body);
-    subscribeHandlers.forEach(handler => handler(jsonBody));
+function defaultHandler(point, data) {
+    point.rawHandlers.forEach(handlerInstance => handlerInstance.handler(data, handlerInstance.args));
 }
 
-function connect(endPoint) {
+function subscribe(point) {
+    stompClient.subscribe(point.endPoint, function (message) {
+        defaultHandler(point, message);
+        defaultJSONHandler(point, message);
+    });
+}
+
+function connect() {
     let socket = new SockJS('/gs-websocket');
     //addRawDataHandler(defaultRawDataHandler);
     stompClient = Stomp.over(socket);
@@ -27,27 +27,8 @@ function connect(endPoint) {
         stompClient.connect({}, function (frame) {
             if(debug === true) console.log('Connected: ' + frame);
             onsuccess();
-            stompClient.subscribe(endPoint, function (message) {
-                rawDataHandlers.forEach(handler => handler(message));
-            });
         });
     });
-}
-
-function addSubscribeEventHandler(handler) {
-    subscribeHandlers.push(handler);
-}
-
-function clearSubscribeHandlers() {
-    subscribeHandlers = [];
-}
-
-function addRawDataHandler(handler) {
-    rawDataHandlers.push(handler);
-}
-
-function clearRawDataHandler() {
-    rawDataHandlers = [];
 }
 
 function send(endPoint, data) {

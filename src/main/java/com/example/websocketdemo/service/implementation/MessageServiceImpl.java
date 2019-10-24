@@ -23,9 +23,16 @@ public class MessageServiceImpl implements MessageService {
         this.conversionService = conversionService;
     }
 
+    private void emptyChecker(String text) throws Exception {
+        text = text.trim();
+        if(text.isEmpty()) throw new Exception("Empty message are not allowed");
+
+    }
+
 
     @Override
-    public Message createMessage(String text, User author) {
+    public Message createMessage(String text, User author) throws Exception {
+        emptyChecker(text);
         Message message = new Message(text, author);
         messageRepository.save(message);
         return message;
@@ -33,6 +40,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message editMessage(long id, String text) throws Exception {
+        emptyChecker(text);
         Message message = messageRepository.findById(id).orElseThrow(() -> new Exception("Cannot find message with id " + id));
         message.setText(text);
         messageRepository.save(message);

@@ -31,29 +31,29 @@ public class UpdaterController {
     }
 
     @MessageMapping("/update")
-    @SendTo("/sender/update")
+    @SendTo("/topic/message")
     public MessageDTO updater(MessageDTO message) throws Exception {
         Message messageInstance = messageService.editMessage(message.getId(), message.getText());
         return messageService.convertToDTO(messageInstance);
     }
 
     @MessageMapping("/create")
-    @SendTo("/sender/update")
+    @SendTo("/topic/message")
     public MessageDTO creator(MessageDTO message) throws Exception {
         Message messageInstance = messageService.createMessage(message.getText(), userService.getCurrentUser());
         return messageService.convertToDTO(messageInstance);
     }
 
     @MessageMapping("/delete")
-    @SendTo("/sender/update")
+    @SendTo("/topic/message")
     public MessageDTO deleter(MessageDTO message) throws Exception {
         messageService.removeMessage(message.getId());
         message = new MessageDTO(message.getId(), true);
         return message;
     }
 
-    @MessageMapping("/read")
-    @SendTo("/sender/update")
+    @MessageMapping("/read/messages")
+    @SendTo("/topic/message")
     public List<MessageDTO> readAll() {
         List<Message> messageList = messageService.readAll();
         List<MessageDTO> messageDTOList = new ArrayList<>();
@@ -61,9 +61,4 @@ public class UpdaterController {
         return messageDTOList;
     }
 
-    @GetMapping("/test")
-    public void test() {
-        SecurityContext ctx = SecurityContextHolder.getContext();
-        Authentication auth = ctx.getAuthentication();
-    }
 }

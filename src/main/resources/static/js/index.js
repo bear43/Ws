@@ -1,3 +1,18 @@
+Vue.component("channel-item", {
+    props: ["id", "title", "author"],
+    methods: {
+        onClick: function() {
+            alert("clicked");
+        }
+    },
+    template: "#channel-item-template"
+});
+
+Vue.component("channel-container", {
+    props: ["channelList"],
+    template: "#channel-container-template"
+});
+
 Vue.component('message-container', {
     props: ["messageList"],
     methods: {
@@ -7,8 +22,12 @@ Vue.component('message-container', {
 });
 
 Vue.component('message-item', {
-    props: ["text", "creationDate", "author"],
+    props: ["id", "text", "creationDate", "author"],
     methods: {
+        onDeleteMessage() {
+            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true);
+            send("/app/delete", msg);
+        }
     },
     template: '#message-item-template'
 });
@@ -31,6 +50,52 @@ Vue.component('modal', {
     }
 });
 
+/*
+    Body or raw handler have next structure:
+    {
+        handler: function(data, args) {...}
+        args: []//Handler args
+    }
+*/
+
+function createHandler(func, args) {
+    return {
+        handler: func,
+        args: args
+    }
+}
+
+const handlerType = {
+    BODY: {
+        createHandlerAndPush: function(endpointInstance, func, args) {
+            endpointInstance.bodyHandlers.push(createHandler(func, args));
+        }
+    },
+    RAW: {
+        createHandlerAndPush: function(endpointInstance, func, args) {
+            endpointInstance.rawHandlers.push(createHandler(func, args));
+        }
+    }
+};
+
+let messageEndpoint = {
+    endPoint: "/topic/message",
+    bodyHandlers: [],
+    rawHandlers: []
+};
+
+let errorEndpoint = {
+    endPoint: "/user/queue/error",
+    bodyHandlers: [],
+    rawHandlers: []
+};
+
+let channelEndpoint = {
+    endPoint: "/user/topic/channel",
+    bodyHandlers: [],
+    rawHandlers: []
+};
+
 // start app
 new Vue({
     el: '#app',
@@ -48,14 +113,16 @@ new Vue({
             }
         },
         onSubmitMessage: function(text) {
-            send("/updater/create", this.createMessageInstance(null, text, null, false));
+            send("/app/create", this.createMessageInstance(null, text, null, false));
         },
         doesMessageExists: function(message) {
             return this.messageList.find(x => x.id === message.id);
         },
         updateMessage: function(messageInstance, newInstance) {
             if(newInstance.removed) {
-                this.messageList.remove(messageInstance);
+                let index = this.messageList.indexOf(messageInstance);
+                if(index !== -1)
+                    this.messageList.splice(index, 1);
             } else {
                 Object.assign(messageInstance, newInstance);
             }
@@ -81,22 +148,40 @@ new Vue({
                 }
             }
         },
-        commonHandler: function (json) {
+        channelHandler: function(json) {
+
+        },
+        commonHandler: function (json, subHandler) {
             if(json.forEach) {
                 json.forEach(x => {
-                    this.messageHandler(x);
+                    subHandler(x);
                 });
             } else {
-                this.messageHandler(json);
+                subHandler(json);
             }
         },
         getMessages: function() {
-            send("/updater/read", {});
+            send("/app/read/messages", {});
+        },
+        getChannels: function() {
+            send("/app/read/channels", {});
+        },
+        exceptionHandler: function(json) {
+            alert(json.message);
         }
     },
     created() {
-        addSubscribeEventHandler(this.commonHandler);
-        connect("/sender/update").then(() => {
+        //messageEndpoint.bodyHandlers.push(this.commonHandler);
+        //errorEndpoint.bodyHandlers.push(createHandler(this.exceptionHandler));
+        //channelEndpoint.bodyHandler.push(createHandler(this.commonHandler, this.channelHandler));
+        handlerType.BODY.createHandlerAndPush(messageEndpoint, this.commonHandler, this.messageHandler);
+        handlerType.BODY.createHandlerAndPush(errorEndpoint, this.exceptionHandler);
+        handlerType.BODY.createHandlerAndPush(channelEndpoint, this.commonHandler, this.channelHandler);
+        connect().then(() => {
+            subscribe(errorEndpoint);
+            subscribe(messageEndpoint);
+            //subscribe(channelEndpoint);
+            //this.getChannels();
             this.getMessages();
         });
     }

@@ -3,11 +3,9 @@ package com.example.websocketdemo.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -19,6 +17,9 @@ public class Channel extends Audit {
 
     @ManyToOne
     private User author;
+
+    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Message> messageList;
 
     public Channel(String title, User author) {
         this.title = title;
