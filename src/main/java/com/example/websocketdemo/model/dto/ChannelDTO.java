@@ -15,9 +15,9 @@ public class ChannelDTO {
 
     private LocalDate creationDate;
 
-    private User author;
+    private UserDTO author;
 
-    public ChannelDTO(Long id, String title, LocalDate creationDate, User author) {
+    public ChannelDTO(Long id, String title, LocalDate creationDate, UserDTO author) {
         this.id = id;
         this.title = title;
         this.creationDate = creationDate;

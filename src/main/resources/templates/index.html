@@ -77,7 +77,7 @@
         <td>
             {{author.username}}
         </td>
-        <td>
+        <td v-if="author.me">
             <button @click="onDeleteMessage">Удалить</button>
         </td>
     </tr>

@@ -15,13 +15,13 @@ public class MessageDTO {
 
     private LocalDate creationDate;
 
-    private User author;
+    private UserDTO author;
 
     private Channel channel;
 
     private boolean removed;
 
-    public MessageDTO(Long id, String text, LocalDate creationDate, boolean removed, User author, Channel channel) {
+    public MessageDTO(Long id, String text, LocalDate creationDate, boolean removed, UserDTO author, Channel channel) {
         this.id = id;
         this.text = text;
         this.creationDate = creationDate;
@@ -30,11 +30,11 @@ public class MessageDTO {
         this.channel = channel;
     }
 
-    public MessageDTO(Long id, String text, User author, Channel channel) {
+    public MessageDTO(Long id, String text, UserDTO author, Channel channel) {
         this(id, text, LocalDate.now(), false, author, channel);
     }
 
-    public MessageDTO(Long id, String text, User author) {
+    public MessageDTO(Long id, String text, UserDTO author) {
         this(id, text, author, null);
     }
 
