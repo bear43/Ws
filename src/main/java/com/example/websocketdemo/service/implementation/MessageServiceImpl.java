@@ -1,5 +1,6 @@
 package com.example.websocketdemo.service.implementation;
 
+import com.example.websocketdemo.model.Channel;
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.User;
 import com.example.websocketdemo.model.dto.MessageDTO;
@@ -67,5 +68,10 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messageList = new ArrayList<>();
         messageRepository.findAll().forEach(messageList::add);
         return messageList;
+    }
+
+    @Override
+    public List<Message> readAllByChannel(Long id) {
+        return messageRepository.findAllByChannelId(id);
     }
 }

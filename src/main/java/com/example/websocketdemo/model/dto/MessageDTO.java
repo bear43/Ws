@@ -4,12 +4,13 @@ import com.example.websocketdemo.model.Channel;
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.User;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class MessageDTO {
-    private Long id;
+public class MessageDTO extends GeneralRemovableDTO {
 
     private String text;
 
@@ -17,11 +18,9 @@ public class MessageDTO {
 
     private UserDTO author;
 
-    private Channel channel;
+    private ChannelDTO channel;
 
-    private boolean removed;
-
-    public MessageDTO(Long id, String text, LocalDate creationDate, boolean removed, UserDTO author, Channel channel) {
+    public MessageDTO(Long id, String text, LocalDate creationDate, boolean removed, UserDTO author, ChannelDTO channel) {
         this.id = id;
         this.text = text;
         this.creationDate = creationDate;
@@ -30,7 +29,7 @@ public class MessageDTO {
         this.channel = channel;
     }
 
-    public MessageDTO(Long id, String text, UserDTO author, Channel channel) {
+    public MessageDTO(Long id, String text, UserDTO author, ChannelDTO channel) {
         this(id, text, LocalDate.now(), false, author, channel);
     }
 

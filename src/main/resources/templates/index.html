@@ -20,13 +20,20 @@
                 footer-text="">
             <add-message-form slot="body" @on-submit-message="onSubmitMessage"></add-message-form>
         </modal>
-        <!--<channel-container
-            v-bind:channel-list="channelList"
-        ></channel-container>-->
-        <message-container
-            v-bind:message-list="messageList"
-        ></message-container>
-        <add-message-form @on-submit-message="onSubmitMessage"></add-message-form>
+        <div v-if="currentViewMode.name === 'CHANNEL_LIST_VIEW_MODE'">
+            <channel-container
+                v-bind:channel-list="channelList"
+                @on-channel-click="onChannelClick"
+            ></channel-container>
+            <add-channel-form @on-submit-channel="onSubmitChannel">
+            </add-channel-form>
+        </div>
+        <div v-if="currentViewMode.name === 'CHANNEL_MESSAGES_VIEW_MODE'">
+            <message-container
+                v-bind:message-list="messageList"
+            ></message-container>
+            <add-message-form @on-submit-message="onSubmitMessage"></add-message-form>
+        </div>
     </div>
 </body>
 <script type="text/x-template" id="modal-template">
@@ -64,6 +71,12 @@
     <div>
         <input type="text" v-model="text"/>
         <button @click="$emit('on-submit-message', text)">Отправить</button>
+    </div>
+</script>
+<script type="text/x-template" id="add-channel-form-template">
+    <div>
+        <input type="text" v-model="title"/>
+        <button @click="$emit('on-submit-channel', title)">Отправить</button>
     </div>
 </script>
 <script type="text/x-template" id="message-item-template">
@@ -104,7 +117,7 @@
 </script>
 <script type="text/x-template" id="channel-item-template">
     <tr>
-        <td>
+        <td @click="$emit('on-channel-click', id)">
             {{title}}
         </td>
         <td>
@@ -125,7 +138,7 @@
                     v-bind:id="item.id"
                     v-bind:title="item.title"
                     v-bind:author="item.author"
-                    @click="onClick"
+                    @on-channel-click="onChannelClick"
             >
             </channel-item>
         </table>

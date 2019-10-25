@@ -2,14 +2,14 @@ package com.example.websocketdemo.model.dto;
 
 import com.example.websocketdemo.model.User;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class ChannelDTO {
-
-    private Long id;
+public class ChannelDTO extends GeneralRemovableDTO {
 
     private String title;
 

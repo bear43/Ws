@@ -1,5 +1,6 @@
 package com.example.websocketdemo.service;
 
+import com.example.websocketdemo.model.Channel;
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.User;
 import com.example.websocketdemo.model.dto.MessageDTO;
@@ -13,4 +14,5 @@ public interface MessageService {
     MessageDTO convertToDTO(Message message);
     Message convertToEntity(MessageDTO messageDTO);
     List<Message> readAll();
+    List<Message> readAllByChannel(Long id);
 }

@@ -1,15 +1,26 @@
+Vue.component("add-channel-form", {
+    data: () => {
+        return {
+            title: ""
+        }
+    },
+    template: "#add-channel-form-template"
+});
+
 Vue.component("channel-item", {
     props: ["id", "title", "author"],
     methods: {
-        onClick: function() {
-            alert("clicked");
-        }
     },
     template: "#channel-item-template"
 });
 
 Vue.component("channel-container", {
     props: ["channelList"],
+    methods: {
+        onChannelClick: function(channelId) {
+            this.$emit("on-channel-click", channelId);
+        }
+    },
     template: "#channel-container-template"
 });
 
@@ -25,8 +36,8 @@ Vue.component('message-item', {
     props: ["id", "text", "creationDate", "author"],
     methods: {
         onDeleteMessage() {
-            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true);
-            send("/app/delete", msg);
+            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true, null);
+            send("/app/delete/message", msg);
         }
     },
     template: '#message-item-template'
@@ -79,7 +90,7 @@ const handlerType = {
 };
 
 let messageEndpoint = {
-    endPoint: "/topic/message",
+    endPoint: "/topic/messages",
     bodyHandlers: [],
     rawHandlers: []
 };
@@ -91,9 +102,28 @@ let errorEndpoint = {
 };
 
 let channelEndpoint = {
-    endPoint: "/user/topic/channel",
+    endPoint: "/topic/channels",
     bodyHandlers: [],
     rawHandlers: []
+};
+
+const applicationModes = {
+    CHANNEL_LIST_VIEW_MODE: {
+        name: "CHANNEL_LIST_VIEW_MODE",
+        switchMode: function(newMode, callback) {
+            applicationModes.switchMode(this, newMode, callback);
+        }
+    },
+    CHANNEL_MESSAGES_VIEW_MODE: {
+        name: "CHANNEL_MESSAGES_VIEW_MODE",
+        switchMode: function(newMode, callback) {
+            applicationModes.switchMode(this, newMode, callback);
+        }
+    },
+    switchMode: function(self, newMode, callback) {
+        if(callback) callback();
+        Object.assign(self.currentViewMode, newMode);
+    }
 };
 
 // start app
@@ -101,55 +131,71 @@ new Vue({
     el: '#app',
     data: {
         showModal: false,
-        messageList: []
+        currentViewMode: applicationModes.CHANNEL_LIST_VIEW_MODE,
+        messageList: [],
+        channelList: [],
+        currentChannelId: null
     },
     methods: {
-        createMessageInstance: (id, text, creationDate, removed) => {
+        createMessageInstance: (id, text, creationDate, removed, channel) => {
             return {
                 id: id,
                 text: text,
+                creationDate: creationDate,
+                removed: removed,
+                channel: channel
+            }
+        },
+        createChannelInstance: (id, title, creationDate, removed) => {
+            return {
+                id: id,
+                title: title,
                 creationDate: creationDate,
                 removed: removed
             }
         },
         onSubmitMessage: function(text) {
-            send("/app/create", this.createMessageInstance(null, text, null, false));
+            send("/app/create/message", this.createMessageInstance(null, text, null, false));
         },
-        doesMessageExists: function(message) {
-            return this.messageList.find(x => x.id === message.id);
+        onSubmitChannel: function(text) {
+            send("/app/create/channel", this.createChannelInstance(null, text, null, false));
         },
-        updateMessage: function(messageInstance, newInstance) {
-            if(newInstance.removed) {
-                let index = this.messageList.indexOf(messageInstance);
-                if(index !== -1)
-                    this.messageList.splice(index, 1);
-            } else {
-                Object.assign(messageInstance, newInstance);
-            }
+        onChannelClick: function(channelId) {
+            this.currentChannelId = channelId;
+            this.getMessages(channelId);
+            this.currentViewMode = applicationModes.CHANNEL_MESSAGES_VIEW_MODE;
         },
+        /* Message operations */
         createMessage: function(message) {
-            this.messageList.push(message);
+            createNewListElement(this.messageList, message);
         },
         removeMessage: function(message) {
-            let obj = this.doesMessageExists(message);
-            if(obj) {
-                this.messageList.remove(obj);
-            }
+            removeListElement(this.messageList, message);
+        },
+        updateMessage: function(messageInstance, newInstance) {
+            updateListElement(this.messageList, messageInstance, newInstance);
+        },
+        doesMessageExists: function(message) {
+            return doesElementExistsInListById(this.messageList, message.id);
+        },
+        /* Channel operations */
+        createChannel: function(channel) {
+            createNewListElement(this.channelList, channel);
+        },
+        removeChannel: function(channel) {
+            removeListElement(this.channelList, channel);
+        },
+        updateChannel: function(channelInstance, newInstance) {
+            updateListElement(this.channelList, channelInstance, newInstance);
+        },
+        doesChannelExists: function(channel) {
+            return doesElementExistsInListById(this.channelList, channel.id);
         },
         messageHandler: function(message) {
-            if (message.id === null) {//how could it be?
-                alert("Error. id is null");
-            } else {
-                let msg = this.doesMessageExists(message);
-                if (msg) {
-                    this.updateMessage(msg, message);
-                } else {
-                    this.createMessage(message);
-                }
-            }
+            handleNewListElement(this.messageList, message);
         },
-        channelHandler: function(json) {
-
+        channelHandler: function(channel) {
+            handleNewListElement(this.channelList, channel);
         },
         commonHandler: function (json, subHandler) {
             if(json.forEach) {
@@ -160,29 +206,36 @@ new Vue({
                 subHandler(json);
             }
         },
-        getMessages: function() {
-            send("/app/read/messages", {});
+        clearMessageList: function() {
+            clearList(this.messageList);
+        },
+        clearChannelList: function() {
+            clearList(this.channelList);
+        },
+        getMessages: function(channelId) {
+            this.clearMessageList();
+            send("/app/read/messages", {id: channelId});
         },
         getChannels: function() {
+            this.clearChannelList();
             send("/app/read/channels", {});
         },
         exceptionHandler: function(json) {
             alert(json.message);
+        },
+        onConnectHandler: function() {
+            subscribe(errorEndpoint);
+            //subscribe(messageEndpoint);
+            subscribe(channelEndpoint);
+            this.getChannels();
         }
     },
     created() {
-        //messageEndpoint.bodyHandlers.push(this.commonHandler);
-        //errorEndpoint.bodyHandlers.push(createHandler(this.exceptionHandler));
-        //channelEndpoint.bodyHandler.push(createHandler(this.commonHandler, this.channelHandler));
         handlerType.BODY.createHandlerAndPush(messageEndpoint, this.commonHandler, this.messageHandler);
         handlerType.BODY.createHandlerAndPush(errorEndpoint, this.exceptionHandler);
         handlerType.BODY.createHandlerAndPush(channelEndpoint, this.commonHandler, this.channelHandler);
         connect().then(() => {
-            subscribe(errorEndpoint);
-            subscribe(messageEndpoint);
-            //subscribe(channelEndpoint);
-            //this.getChannels();
-            this.getMessages();
+            this.onConnectHandler();
         });
     }
 });
