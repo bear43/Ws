@@ -1,8 +1,10 @@
 package com.example.websocketdemo.converter.message;
 
 import com.example.websocketdemo.model.Message;
+import com.example.websocketdemo.model.dto.ChannelDTO;
 import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.model.dto.UserDTO;
+import com.example.websocketdemo.service.MessageService;
 import com.example.websocketdemo.service.UserService;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -29,7 +31,8 @@ public class MessageToMessageDTOConverter implements Converter<Message, MessageD
         } catch (Exception ignored) {
 
         }
-        return new MessageDTO(message.getId(), message.getText(), message.getCreationTime(), false, userDTO, message.getChannel());
+        ChannelDTO channelDTO = conversionService.convert(message.getChannel(), ChannelDTO.class);
+        return new MessageDTO(message.getId(), message.getText(), message.getCreationDate(), false, userDTO, channelDTO);
     }
 
 

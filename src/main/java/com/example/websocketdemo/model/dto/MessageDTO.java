@@ -10,13 +10,11 @@ import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class MessageDTO extends GeneralRemovableDTO {
+public class MessageDTO extends GeneralRemovableAuthoredDTO {
 
     private String text;
 
     private LocalDate creationDate;
-
-    private UserDTO author;
 
     private ChannelDTO channel;
 

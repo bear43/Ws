@@ -13,16 +13,8 @@ import java.time.LocalDate;
 @Data
 public class Message extends Audit {
 
-    @Id
-    @GeneratedValue
-    private Long id;
-
     @Column
     private String text;
-
-    @CreationTimestamp
-    @Column
-    private LocalDate creationTime;
 
     @ManyToOne
     private User author;

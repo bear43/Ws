@@ -4,10 +4,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -21,6 +18,7 @@ public class Audit {
     private Long id;
 
     @CreationTimestamp
+    @Column(updatable = false)
     private LocalDate creationDate;
 
     @UpdateTimestamp

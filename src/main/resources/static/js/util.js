@@ -6,6 +6,29 @@ let debug = false;
 
 let reconnectDelay = 2000;
 
+function createEndpointInstance(endpoint, bodyHandlers, rawHandlers) {
+    return {
+        endPoint: endpoint,
+        bodyHandlers: bodyHandlers ? bodyHandlers : [],
+        rawHandlers: rawHandlers ? rawHandlers : []
+    };
+}
+
+/*
+    Body or raw handler have next structure:
+    {
+        handler: function(data, args) {...}
+        args: []//Handler args
+    }
+*/
+
+function createHandler(func, args) {
+    return {
+        handler: func,
+        args: args
+    }
+}
+
 function defaultJSONHandler(point, data) {
     point.bodyHandlers.forEach(handlerInstance => {
         handlerInstance.handler(JSON.parse(data.body), handlerInstance.args);
@@ -17,10 +40,16 @@ function defaultHandler(point, data) {
 }
 
 function subscribe(point) {
-    stompClient.subscribe(point.endPoint, function (message) {
+    return stompClient.subscribe(point.endPoint, function (message) {
         defaultHandler(point, message);
         defaultJSONHandler(point, message);
     });
+}
+
+function subscribeById(endPoint, id, ...handlers) {
+    let newEndPoint = createEndpointInstance(endPoint + id);
+    handlerType.BODY.createHandlerAndPush(newEndPoint, handlers[0], handlers[1]);
+    return subscribe(newEndPoint);
 }
 
 function clearList(listInstance) {
@@ -41,8 +70,8 @@ function createNewListElement(listInstance, newElement) {
     listInstance.push(newElement);
 }
 
-function doesElementExistsInListById(listInstance, id) {
-    return listInstance.find(x => x.id === id);
+function doesElementExistsInListById(listInstance, element) {
+    return listInstance.find(x => x.id === element.id);
 }
 
 function removeListElement(listInstance, element) {

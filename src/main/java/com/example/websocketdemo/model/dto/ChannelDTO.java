@@ -9,13 +9,11 @@ import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ChannelDTO extends GeneralRemovableDTO {
+public class ChannelDTO extends GeneralRemovableAuthoredDTO {
 
     private String title;
 
     private LocalDate creationDate;
-
-    private UserDTO author;
 
     public ChannelDTO(Long id, String title, LocalDate creationDate, UserDTO author) {
         this.id = id;

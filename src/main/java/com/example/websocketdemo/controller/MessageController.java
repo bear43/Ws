@@ -1,59 +1,74 @@
 package com.example.websocketdemo.controller;
 
-import com.example.websocketdemo.model.Channel;
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.dto.GeneralDTO;
 import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.service.MessageService;
 import com.example.websocketdemo.service.UserService;
+import com.example.websocketdemo.util.sender.Sender;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class MessageController {
 
     private final MessageService messageService;
 
-    private final UserService userService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
-    public MessageController(MessageService messageService, UserService userService) {
+    private final Sender sender;
+
+    private static final String channelRoute = "/topic/channel/";
+
+    public MessageController(MessageService messageService, SimpMessagingTemplate simpMessagingTemplate) {
         this.messageService = messageService;
-        this.userService = userService;
+        this.simpMessagingTemplate = simpMessagingTemplate;
+        this.sender = new Sender(simpMessagingTemplate);
+    }
+
+    private String makeRouteToChannel(Long channelId) throws Exception {
+        if(channelId == null) throw new Exception("Wrong channel id");
+        return channelRoute + channelId;
     }
 
     @MessageMapping("/update/message")
-    @SendTo("/topic/messages")
-    public MessageDTO updater(MessageDTO message) throws Exception {
-        Message messageInstance = messageService.editMessage(message.getId(), message.getText());
-        return messageService.convertToDTO(messageInstance);
+    public void updater(MessageDTO message, Principal principal) throws Exception {
+        sender.sendToUserAndAll(
+                makeRouteToChannel(message.getChannel().getId()),
+                principal,
+                messageService.editMessage(message));
     }
 
     @MessageMapping("/create/message")
-    @SendTo("/topic/messages")
-    public MessageDTO creator(MessageDTO message) throws Exception {
-        Message messageInstance = messageService.createMessage(message.getText(), userService.getCurrentUser());
-        return messageService.convertToDTO(messageInstance);
+    public void creator(MessageDTO message, Principal principal) throws Exception {
+        sender.sendToUserAndAll(
+                makeRouteToChannel(message.getChannel().getId()),
+                principal,
+                messageService.createMessage(message)
+        );
     }
 
     @MessageMapping("/delete/message")
-    @SendTo("/topic/messages")
-    public MessageDTO deleter(MessageDTO message) throws Exception {
+    public void deleter(MessageDTO message) throws Exception {
         messageService.removeMessage(message.getId());
-        message = new MessageDTO(message.getId(), true);
-        return message;
+        message.setRemoved(true);
+        simpMessagingTemplate.convertAndSend(
+                makeRouteToChannel(message.getChannel().getId()),
+                message);
     }
 
     @MessageMapping("/read/messages")
-    @SendTo("/topic/messages")
-    public List<MessageDTO> readAll(GeneralDTO wrapper) {
-        List<Message> messageList = messageService.readAllByChannel(wrapper.getId());
-        List<MessageDTO> messageDTOList = new ArrayList<>();
-        messageList.forEach(x -> messageDTOList.add(messageService.convertToDTO(x)));
-        return messageDTOList;
+    public void readAll(GeneralDTO wrapper, Principal principal) throws Exception{
+        Optional<Long> channelId = Optional.of(wrapper.getId());
+        List<MessageDTO> messageDTOList = messageService.readAllByChannel(channelId.orElseThrow(() -> new Exception("Wrong channel id!")));
+        simpMessagingTemplate.convertAndSendToUser(principal.getName(), makeRouteToChannel(channelId.get()), messageDTOList);
     }
 
 }

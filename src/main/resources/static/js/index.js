@@ -10,6 +10,10 @@ Vue.component("add-channel-form", {
 Vue.component("channel-item", {
     props: ["id", "title", "author"],
     methods: {
+        onDeleteChannel: function() {
+            let msg = this.$root.createChannelInstance(this.id, this.title, null, false);
+            send("/app/delete/channel", msg);
+        }
     },
     template: "#channel-item-template"
 });
@@ -35,8 +39,8 @@ Vue.component('message-container', {
 Vue.component('message-item', {
     props: ["id", "text", "creationDate", "author"],
     methods: {
-        onDeleteMessage() {
-            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true, null);
+        onDeleteMessage: function() {
+            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true, this.$root.currentChannelInstance);
             send("/app/delete/message", msg);
         }
     },
@@ -61,21 +65,6 @@ Vue.component('modal', {
     }
 });
 
-/*
-    Body or raw handler have next structure:
-    {
-        handler: function(data, args) {...}
-        args: []//Handler args
-    }
-*/
-
-function createHandler(func, args) {
-    return {
-        handler: func,
-        args: args
-    }
-}
-
 const handlerType = {
     BODY: {
         createHandlerAndPush: function(endpointInstance, func, args) {
@@ -89,23 +78,12 @@ const handlerType = {
     }
 };
 
-let messageEndpoint = {
-    endPoint: "/topic/messages",
-    bodyHandlers: [],
-    rawHandlers: []
-};
+let errorEndpoint = createEndpointInstance("/user/queue/error");
 
-let errorEndpoint = {
-    endPoint: "/user/queue/error",
-    bodyHandlers: [],
-    rawHandlers: []
-};
+let channelEndpoint = createEndpointInstance("/topic/channels");
 
-let channelEndpoint = {
-    endPoint: "/topic/channels",
-    bodyHandlers: [],
-    rawHandlers: []
-};
+let userChannelEndpoint = createEndpointInstance("/user/topic/channels");
+
 
 const applicationModes = {
     CHANNEL_LIST_VIEW_MODE: {
@@ -134,7 +112,9 @@ new Vue({
         currentViewMode: applicationModes.CHANNEL_LIST_VIEW_MODE,
         messageList: [],
         channelList: [],
-        currentChannelId: null
+        currentChannelSubscribe: null,
+        currentUserChannelSubscribe: null,
+        currentChannelInstance: null
     },
     methods: {
         createMessageInstance: (id, text, creationDate, removed, channel) => {
@@ -155,13 +135,16 @@ new Vue({
             }
         },
         onSubmitMessage: function(text) {
-            send("/app/create/message", this.createMessageInstance(null, text, null, false));
+            send("/app/create/message",
+                this.createMessageInstance(null, text, null, false, this.currentChannelInstance));
         },
         onSubmitChannel: function(text) {
             send("/app/create/channel", this.createChannelInstance(null, text, null, false));
         },
         onChannelClick: function(channelId) {
-            this.currentChannelId = channelId;
+            this.currentChannelInstance = this.createChannelInstance(channelId, null, null, false);
+            this.currentChannelSubscribe = subscribeById("/topic/channel/", channelId, this.commonHandler, this.messageHandler);
+            this.currentUserChannelSubscribe = subscribeById("/user/topic/channel/", channelId, this.commonHandler, this.messageHandler);
             this.getMessages(channelId);
             this.currentViewMode = applicationModes.CHANNEL_MESSAGES_VIEW_MODE;
         },
@@ -225,15 +208,15 @@ new Vue({
         },
         onConnectHandler: function() {
             subscribe(errorEndpoint);
-            //subscribe(messageEndpoint);
             subscribe(channelEndpoint);
+            subscribe(userChannelEndpoint);
             this.getChannels();
         }
     },
     created() {
-        handlerType.BODY.createHandlerAndPush(messageEndpoint, this.commonHandler, this.messageHandler);
         handlerType.BODY.createHandlerAndPush(errorEndpoint, this.exceptionHandler);
         handlerType.BODY.createHandlerAndPush(channelEndpoint, this.commonHandler, this.channelHandler);
+        handlerType.BODY.createHandlerAndPush(userChannelEndpoint, this.commonHandler, this.channelHandler);
         connect().then(() => {
             this.onConnectHandler();
         });

@@ -1,27 +1,20 @@
 package com.example.websocketdemo.controller;
 
 import com.example.websocketdemo.model.Channel;
-import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.dto.ChannelDTO;
-import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.service.ChannelService;
-import com.example.websocketdemo.service.MessageService;
 import com.example.websocketdemo.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.convert.ConversionService;
+import com.example.websocketdemo.util.sender.Sender;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class ChannelController {
@@ -30,44 +23,49 @@ public class ChannelController {
 
     private final UserService userService;
 
-    public ChannelController(ChannelService channelService, UserService userService) {
+    private final SimpMessagingTemplate simpMessagingTemplate;
+
+    private final Sender sender;
+
+    private final String route = "/topic/channels";
+
+    public ChannelController(ChannelService channelService, UserService userService, SimpMessagingTemplate simpMessagingTemplate) {
         this.channelService = channelService;
         this.userService = userService;
+        this.simpMessagingTemplate = simpMessagingTemplate;
+        this.sender = new Sender(simpMessagingTemplate);
     }
 
     @MessageMapping("/update/channel")
-    @SendTo("/topic/channels")
-    public ChannelDTO updater(ChannelDTO channelDTO) throws Exception {
-        return channelService.editChannel(channelDTO);
+    public void updater(ChannelDTO channelDTO, Principal principal) throws Exception {
+        sender.sendToUserAndAll(
+                route,
+                principal,
+                channelService.editChannel(channelDTO)
+        );
     }
 
     @MessageMapping("/create/channel")
-    @SendTo("/topic/channels")
-    public ChannelDTO creator(ChannelDTO channelDTO) throws Exception {
-        return channelService.createChannel(channelDTO.getTitle(), userService.getCurrentUser());
+    public void creator(ChannelDTO channelDTO, Principal principal) throws Exception {
+        sender.sendToUserAndAll(
+                route,
+                principal,
+                channelService.createChannel(channelDTO.getTitle(), userService.getCurrentUser())
+        );
     }
 
     @MessageMapping("/delete/channel")
     @SendTo("/topic/channels")
     public ChannelDTO deleter(ChannelDTO channelDTO) throws Exception {
-        channelService.removeChannel(channelDTO);
+        channelService.removeChannel(channelDTO.getId());
         channelDTO.setRemoved(true);
         return channelDTO;
     }
 
     @MessageMapping("/read/channels")
-    @SendTo("/topic/channels")
-    public List<ChannelDTO> readAll() {
-        List<Channel> channelList = channelService.readAll();
-        List<ChannelDTO> channelDTOList = new ArrayList<>();
-        channelList.forEach(x -> {
-            try {
-                channelDTOList.add(channelService.convertToDTO(x));
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-        return channelDTOList;
+    @SendToUser("/topic/channels")
+    public List<ChannelDTO> readAll() throws Exception {
+        return channelService.readAll().stream().map(channelService::convertToDTO).collect(Collectors.toList());
     }
 
 

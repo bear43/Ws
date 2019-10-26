@@ -1,7 +1,9 @@
 package com.example.websocketdemo.converter.message;
 
+import com.example.websocketdemo.model.Channel;
 import com.example.websocketdemo.model.Message;
 import com.example.websocketdemo.model.User;
+import com.example.websocketdemo.model.dto.ChannelDTO;
 import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.model.dto.UserDTO;
 import com.example.websocketdemo.service.UserService;
@@ -21,7 +23,8 @@ public class MessageDTOToMessageConverter implements Converter<MessageDTO, Messa
     @Override
     public Message convert(MessageDTO messageDTO) {
         User user = conversionService.convert(messageDTO.getAuthor(), User.class);
-        Message message = new Message(messageDTO.getText(), user, messageDTO.getChannel());
+        Channel channel = conversionService.convert(messageDTO.getChannel(), Channel.class);
+        Message message = new Message(messageDTO.getText(), user,  channel);
         message.setId(messageDTO.getId());
         return message;
     }

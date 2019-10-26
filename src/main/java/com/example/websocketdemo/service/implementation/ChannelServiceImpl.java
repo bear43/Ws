@@ -5,12 +5,17 @@ import com.example.websocketdemo.model.User;
 import com.example.websocketdemo.model.dto.ChannelDTO;
 import com.example.websocketdemo.repository.ChannelRepository;
 import com.example.websocketdemo.service.ChannelService;
+import com.example.websocketdemo.service.UserService;
+import com.example.websocketdemo.util.permission.PermissionChecker;
+import org.apache.tomcat.util.security.PermissionCheck;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class ChannelServiceImpl implements ChannelService {
@@ -20,6 +25,11 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Autowired
     private ConversionService conversionService;
+
+    @Autowired
+    private UserService userService;
+
+    private final PermissionChecker permissionChecker = new PermissionChecker("You have no permission");
 
     private void duplicateChecker(String title, String oldTitle) throws Exception {
         boolean existsWithThisTitle = channelRepository.existsByTitle(title);
@@ -38,30 +48,38 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Override
     public ChannelDTO editChannel(ChannelDTO channel) throws Exception {
-        duplicateChecker(channel.getTitle(), channelRepository.getTitleById(channel.getId()));
-        Channel channelInstance = channelRepository.save(convertToEntity(channel));
-        return convertToDTO(channelInstance);
+        return  permissionChecker.doPermissionActionTyped(this, userService.getCurrentUser().getId(), channel.getId(), () -> {
+            duplicateChecker(channel.getTitle(), channelRepository.getTitleById(channel.getId()));
+            Channel channelInstance = channelRepository.save(convertToEntity(channel));
+            return convertToDTO(channelInstance);
+        });
     }
 
     @Override
-    public void removeChannel(ChannelDTO channel) throws Exception {
-        channelRepository.delete(convertToEntity(channel));
+    public void removeChannel(long id) throws Exception {
+        permissionChecker.doPermissionActionVoid(this, userService.getCurrentUser().getId(), id, () -> {
+            channelRepository.deleteById(id);
+            //channelRepository.delete(convertToEntity(channel));//TODO: WHY THAT DOESN'T WORK? Does that work like that 'cause messageList are null when it calls em.remove? The difference in only that move
+        });
     }
 
     @Override
     public List<Channel> readAll() {
-        List<Channel> channelList = new ArrayList<>();
-        channelRepository.findAll().forEach(channelList::add);
-        return channelList;
+        return StreamSupport.stream(channelRepository.findAll().spliterator(), true).collect(Collectors.toList());
     }
 
     @Override
-    public ChannelDTO convertToDTO(Channel channel) throws Exception {
+    public ChannelDTO convertToDTO(Channel channel) {
         return conversionService.convert(channel, ChannelDTO.class);
     }
 
     @Override
-    public Channel convertToEntity(ChannelDTO channelDTO) throws Exception {
+    public Channel convertToEntity(ChannelDTO channelDTO) {
         return conversionService.convert(channelDTO, Channel.class);
+    }
+
+    @Override
+    public boolean hasPermission(long userId, long entityId) {
+        return channelRepository.hasPermission(userId, entityId);
     }
 }
