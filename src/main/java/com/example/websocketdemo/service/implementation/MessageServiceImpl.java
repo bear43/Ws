@@ -37,10 +37,14 @@ public class MessageServiceImpl implements MessageService {
 
     }
 
+    private void emptyChecker(Byte[] data) throws  Exception{
+        if(data.length == 0) throw new Exception("Cannot save empty data");
+    }
+
 
     @Override
     public MessageDTO createMessage(MessageDTO messageDTO) throws Exception {
-        emptyChecker(messageDTO.getText());
+        emptyChecker(messageDTO.getData());
         Message message = conversionService.convert(messageDTO, Message.class);
         message.setAuthor(userService.getCurrentUser());
         messageRepository.save(message);
@@ -50,7 +54,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageDTO editMessage(MessageDTO messageDTO) throws Exception {
         return permissionChecker.doPermissionActionTyped(this, userService.getCurrentUser().getId(), messageDTO.getId(), () -> {
-            emptyChecker(messageDTO.getText());
+            emptyChecker(messageDTO.getData());
             if(!messageRepository.existsById(messageDTO.getId()))  throw new Exception("Cannot find message with id " + messageDTO.getId());
             Message message = conversionService.convert(messageDTO, Message.class);
             messageRepository.save(message);

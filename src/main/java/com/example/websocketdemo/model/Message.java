@@ -2,11 +2,8 @@ package com.example.websocketdemo.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -14,7 +11,7 @@ import java.time.LocalDate;
 public class Message extends Audit {
 
     @Column
-    private String text;
+    private Byte[] data;
 
     @ManyToOne
     private User author;
@@ -22,18 +19,22 @@ public class Message extends Audit {
     @ManyToOne
     private Channel channel;
 
-    public Message(String text, User author, Channel channel) {
-        this.text = text;
+    @Column
+    private MessageType messageType;
+
+    public Message(Byte[] data, User author, Channel channel, MessageType messageType) {
+        this.data = data;
         this.author = author;
         this.channel = channel;
+        this.messageType = messageType;
     }
 
-    public Message(String text, User author) {
-        this(text, author, null);
+    public Message(Byte[] data, User author) {
+        this(data, author, null, MessageType.TEXT);
     }
 
-    public Message(String text) {
-        this(text, null);
+    public Message(Byte[] data) {
+        this(data, null);
     }
 
     public Message() {}

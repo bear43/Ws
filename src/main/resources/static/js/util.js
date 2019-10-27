@@ -52,6 +52,36 @@ function subscribeById(endPoint, id, ...handlers) {
     return subscribe(newEndPoint);
 }
 
+function isEmptyString(str) {
+    let trimmedString = str.trim();
+    return trimmedString.length === 0;
+}
+
+function createSoundWithBuffer( buffer ) {
+
+    /*
+      This audio context is unprefixed!
+    */
+    var context = new AudioContext();
+
+    var audioSource = context.createBufferSource();
+    audioSource.connect( context.destination );
+
+    context.decodeAudioData(buffer, function( res ) {
+
+        audioSource.buffer = res;
+
+        /*
+           Do something with the sound, for instance, play it.
+           Watch out: all the sounds will sound at the same time!
+        */
+        audioSource.start();
+    } );
+
+}
+
+
+
 function clearList(listInstance) {
     listInstance.splice(0, listInstance.length);
 }

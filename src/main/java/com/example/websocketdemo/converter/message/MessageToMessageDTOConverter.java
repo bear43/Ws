@@ -32,7 +32,7 @@ public class MessageToMessageDTOConverter implements Converter<Message, MessageD
 
         }
         ChannelDTO channelDTO = conversionService.convert(message.getChannel(), ChannelDTO.class);
-        return new MessageDTO(message.getId(), message.getText(), message.getCreationDate(), false, userDTO, channelDTO);
+        return new MessageDTO(message.getId(), message.getData(), message.getCreationDate(), false, userDTO, channelDTO, message.getMessageType());
     }
 
 

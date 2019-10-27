@@ -1,8 +1,6 @@
 package com.example.websocketdemo.model.dto;
 
-import com.example.websocketdemo.model.Channel;
-import com.example.websocketdemo.model.Message;
-import com.example.websocketdemo.model.User;
+import com.example.websocketdemo.model.MessageType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,35 +10,38 @@ import java.time.LocalDate;
 @Data
 public class MessageDTO extends GeneralRemovableAuthoredDTO {
 
-    private String text;
+    private Byte[] data;
 
     private LocalDate creationDate;
 
     private ChannelDTO channel;
 
-    public MessageDTO(Long id, String text, LocalDate creationDate, boolean removed, UserDTO author, ChannelDTO channel) {
+    private MessageType messageType;
+
+    public MessageDTO(Long id, Byte[] data, LocalDate creationDate, boolean removed, UserDTO author, ChannelDTO channel, MessageType messageType) {
         this.id = id;
-        this.text = text;
+        this.data = data;
         this.creationDate = creationDate;
         this.removed = removed;
         this.author = author;
         this.channel = channel;
+        this.messageType = messageType;
     }
 
-    public MessageDTO(Long id, String text, UserDTO author, ChannelDTO channel) {
-        this(id, text, LocalDate.now(), false, author, channel);
+    public MessageDTO(Long id, Byte[] data, UserDTO author, ChannelDTO channel) {
+        this(id, data, LocalDate.now(), false, author, channel, MessageType.TEXT);
     }
 
-    public MessageDTO(Long id, String text, UserDTO author) {
-        this(id, text, author, null);
+    public MessageDTO(Long id, Byte[] data, UserDTO author) {
+        this(id, data, author, null);
     }
 
-    public MessageDTO(Long id, String text) {
-        this(id, text, null);
+    public MessageDTO(Long id, Byte[] data) {
+        this(id, data, null);
     }
 
     public MessageDTO(long id, boolean removed) {
-        this(id, null, null, true, null, null);
+        this(id, null, null, true, null, null, MessageType.TEXT);
     }
 
     public MessageDTO() {}

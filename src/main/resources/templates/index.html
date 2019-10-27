@@ -11,15 +11,6 @@
 </head>
 <body>
     <div id="app">
-        <button id="show-modal" @click="showModal = true">Show Modal</button>
-        <modal
-                v-if="showModal"
-                @close="showModal = false"
-                header-text="Add message"
-                body-text="bodyTest"
-                footer-text="">
-            <add-message-form slot="body" @on-submit-message="onSubmitMessage"></add-message-form>
-        </modal>
         <div v-if="currentViewMode.name === 'CHANNEL_LIST_VIEW_MODE'">
             <channel-container
                 v-bind:channel-list="channelList"
@@ -29,10 +20,12 @@
             </add-channel-form>
         </div>
         <div v-if="currentViewMode.name === 'CHANNEL_MESSAGES_VIEW_MODE'">
+            <button id="show-modal" @click="onClickBackButton">Back</button>
             <message-container
                 v-bind:message-list="messageList"
             ></message-container>
             <add-message-form @on-submit-message="onSubmitMessage"></add-message-form>
+            <add-voice-message-form @on-submit-voice="onSubmitVoice"></add-voice-message-form>
         </div>
     </div>
 </body>
@@ -70,16 +63,22 @@
 <script type="text/x-template" id="add-message-form">
     <div>
         <input type="text" v-model="text"/>
-        <button @click="$emit('on-submit-message', text)">Отправить</button>
+        <button @click="onClickSubmit">Отправить</button>
+    </div>
+</script>
+<script type="text/x-template" id="add-voice-message-form-template">
+    <div>
+        <button @click="onClickRecord">Запись</button>
+        <button @click="onClickSubmit">Отправить</button>
     </div>
 </script>
 <script type="text/x-template" id="add-channel-form-template">
     <div>
         <input type="text" v-model="title"/>
-        <button @click="$emit('on-submit-channel', title)">Отправить</button>
+        <button @click="onClickSubmit">Отправить</button>
     </div>
 </script>
-<script type="text/x-template" id="message-item-template">
+<script type="text/x-template" id="text-message-item-template">
     <tr>
         <td>
             {{text}}
@@ -95,6 +94,39 @@
         </td>
     </tr>
 </script>
+<script type="text/x-template" id="voice-message-item-template">
+    <tr>
+        <td>
+            <audio ref="audio" controls></audio>
+            <button @click="onClickPlayButton">Play</button>
+        </td>
+        <td>
+            {{creationDate}}
+        </td>
+        <td>
+            {{author.username}}
+        </td>
+        <td v-if="author.me">
+            <button @click="onDeleteMessage">Удалить</button>
+        </td>
+    </tr>
+</script>
+<script type="text/x-template" id="message-item-template">
+    <text-message-item
+        v-if="message.messageType === 'TEXT'"
+        v-bind:id="message.id"
+        v-bind:text="message.text"
+        v-bind:author="message.author"
+        v-bind:creationDate="message.creationDate"
+    ></text-message-item>
+    <voice-message-item
+        v-else
+        v-bind:id="message.id"
+        v-bind:data="message.data"
+        v-bind:author="message.author"
+        v-bind:creationDate="message.creationDate"
+    ></voice-message-item>
+</script>
 <script type="text/x-template" id="msg-cont">
     <div>
         <table border="1">
@@ -106,10 +138,7 @@
             <message-item
                     v-for="item in messageList"
                     v-bind:key="item.id"
-                    v-bind:id="item.id"
-                    v-bind:text="item.text"
-                    v-bind:author="item.author"
-                    v-bind:creationDate="item.creationDate"
+                    v-bind:message="item"
             >
             </message-item>
         </table>

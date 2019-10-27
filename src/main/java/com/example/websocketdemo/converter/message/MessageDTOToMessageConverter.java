@@ -24,7 +24,7 @@ public class MessageDTOToMessageConverter implements Converter<MessageDTO, Messa
     public Message convert(MessageDTO messageDTO) {
         User user = conversionService.convert(messageDTO.getAuthor(), User.class);
         Channel channel = conversionService.convert(messageDTO.getChannel(), Channel.class);
-        Message message = new Message(messageDTO.getText(), user,  channel);
+        Message message = new Message(messageDTO.getData(), user,  channel, messageDTO.getMessageType());
         message.setId(messageDTO.getId());
         return message;
     }
