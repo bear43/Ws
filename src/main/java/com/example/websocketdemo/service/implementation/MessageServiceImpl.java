@@ -5,8 +5,8 @@ import com.example.websocketdemo.model.dto.MessageDTO;
 import com.example.websocketdemo.repository.MessageRepository;
 import com.example.websocketdemo.service.MessageService;
 import com.example.websocketdemo.service.UserService;
-import com.example.websocketdemo.util.permission.PermissionChecker;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,8 +22,6 @@ public class MessageServiceImpl implements MessageService {
     private final ConversionService conversionService;
 
     private final UserService userService;
-
-    private final PermissionChecker permissionChecker = new PermissionChecker("You have no permission");
 
     public MessageServiceImpl(MessageRepository messageRepository, ConversionService conversionService, UserService userService) {
         this.messageRepository = messageRepository;
@@ -52,21 +50,24 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @PreAuthorize("@messageRepository.hasPermission(#messageDTO.getId(), @userServiceImpl.getCurrentUser().getId())")
     public MessageDTO editMessage(MessageDTO messageDTO) throws Exception {
-        return permissionChecker.doPermissionActionTyped(this, userService.getCurrentUser().getId(), messageDTO.getId(), () -> {
-            emptyChecker(messageDTO.getData());
-            if(!messageRepository.existsById(messageDTO.getId()))  throw new Exception("Cannot find message with id " + messageDTO.getId());
-            Message message = conversionService.convert(messageDTO, Message.class);
-            messageRepository.save(message);
-            return convertToDTO(message);
-        });
+        emptyChecker(messageDTO.getData());
+        if(!messageRepository.existsById(messageDTO.getId()))  throw new Exception("Cannot find message with id " + messageDTO.getId());
+        Message message = conversionService.convert(messageDTO, Message.class);
+        messageRepository.save(message);
+        return convertToDTO(message);
+        /*return permissionChecker.doPermissionActionTyped(this, userService.getCurrentUser().getId(), messageDTO.getId(), () -> {
+        });*/
     }
 
     @Override
+    @PreAuthorize("@messageRepository.hasPermission(#id, @userServiceImpl.getCurrentUser().getId())")
     public void removeMessage(long id) throws Exception {
-        permissionChecker.doPermissionActionVoid(this, userService.getCurrentUser().getId(), id, () -> {
+        messageRepository.deleteById(id);
+        /*permissionChecker.doPermissionActionVoid(this, userService.getCurrentUser().getId(), id, () -> {
             messageRepository.deleteById(id);
-        });
+        });*/
     }
 
     @Override

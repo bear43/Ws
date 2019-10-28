@@ -55,7 +55,7 @@ Vue.component('text-message-item', {
     props: ["id", "text", "creationDate", "author"],
     methods: {
         onDeleteMessage: function() {
-            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true, this.$root.currentChannelInstance);
+            let msg = this.$root.createMessageInstance(this.id, null, null, true, this.$root.currentChannelInstance);
             send("/app/delete/message", msg);
         }
     },
@@ -66,7 +66,7 @@ Vue.component('voice-message-item', {
     props: ["id", "data", "creationDate", "author"],
     methods: {
         onDeleteMessage: function() {
-            let msg = this.$root.createMessageInstance(this.id, this.text, this.creationDate, true, this.$root.currentChannelInstance);
+            let msg = this.$root.createMessageInstance(this.id, null, null, true, this.$root.currentChannelInstance);
             send("/app/delete/message", msg);
         },
         onClickPlayButton: (data) => {
@@ -102,7 +102,7 @@ Vue.component('add-voice-message-form', {
                     this.data.push(event.data);
                 });
                 console.log(stream);
-            });
+            }).catch(error => alert("No matching devices are available. Error: " + error));
         },
         onClickSubmit: function() {
             if(this.mediaRecorder) {
@@ -190,6 +190,8 @@ const messageType = {
                 return messageType.TEXT;
             case this.VOICE.name:
                 return messageType.VOICE;
+            default:
+                return messageType.TEXT;
         }
     }
 };
